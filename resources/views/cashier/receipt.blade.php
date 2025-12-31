@@ -14,7 +14,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex flex-wrap gap-3">
+            <div class="flex flex-wrap gap-3 print:hidden">
                 <button onclick="window.print()" class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
@@ -37,108 +37,231 @@
         </div>
     </x-slot>
 
+    @php
+        // Use stored values from the order
+        $subtotal = $order->subtotal;
+        $taxAmount = $order->tax;
+        $grandTotal = $order->total;
+        $receiptNo = str_pad($order->id, 6, '0', STR_PAD_LEFT);
+    @endphp
+
     <div class="py-8">
-        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white shadow-lg ring-1 ring-gray-200 rounded-2xl overflow-hidden print:shadow-none print:ring-0">
-                {{-- Receipt Header --}}
-                <div class="bg-gray-900 text-white px-6 py-8 text-center print:bg-white print:text-black">
-                    <h1 class="text-2xl font-bold">POS System</h1>
-                    <p class="text-gray-400 mt-1 print:text-gray-600">Sales Receipt</p>
+        <div class="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
+            {{-- Screen Preview Card --}}
+            <div class="bg-white shadow-lg ring-1 ring-gray-200 rounded-2xl overflow-hidden print:hidden mb-4">
+                <div class="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                    <p class="text-sm text-gray-600 text-center">Receipt Preview (80mm Thermal)</p>
                 </div>
+            </div>
 
-                <div class="p-6 space-y-6">
-                    {{-- Order Info --}}
-                    <div class="flex justify-between text-sm border-b border-dashed border-gray-200 pb-4">
-                        <div>
-                            <p class="text-gray-500">Order Number</p>
-                            <p class="font-mono font-semibold text-gray-900">#{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</p>
+            {{-- Thermal Receipt - Optimized for 80mm (42 chars width) --}}
+            <div id="thermal-receipt" class="bg-white shadow-lg ring-1 ring-gray-200 rounded-lg overflow-hidden print:shadow-none print:ring-0 print:rounded-none">
+                <div class="receipt-content p-4 font-mono text-sm leading-tight" style="width: 80mm; max-width: 100%;">
+
+                    {{-- ========== HEADER ========== --}}
+                    <div class="text-center mb-3">
+                        <div class="text-lg font-bold tracking-wide">IDEAS ELECTRICALS</div>
+                        <div class="text-xs mt-1">PMB 30, East Legon</div>
+                        <div class="text-xs">Tel: +233244062967</div>
+                        <div class="text-xs">VAT No: GHA 001</div>
+                    </div>
+
+                    <div class="border-t border-dashed border-gray-400 my-2"></div>
+
+                    {{-- ========== TRANSACTION INFO ========== --}}
+                    <div class="text-xs space-y-0.5 mb-2">
+                        <div class="flex justify-between">
+                            <span>Receipt No:</span>
+                            <span class="font-semibold">#{{ $receiptNo }}</span>
                         </div>
-                        <div class="text-right">
-                            <p class="text-gray-500">Date & Time</p>
-                            <p class="font-semibold text-gray-900">{{ $order->created_at->format('M d, Y') }}</p>
-                            <p class="text-gray-600">{{ $order->created_at->format('h:i A') }}</p>
+                        <div class="flex justify-between">
+                            <span>Date:</span>
+                            <span>{{ $order->created_at->format('d/m/Y') }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Time:</span>
+                            <span>{{ $order->created_at->format('H:i:s') }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Cashier:</span>
+                            <span>{{ $order->user?->name ?? 'N/A' }}</span>
                         </div>
                     </div>
 
-                    {{-- Cashier Info --}}
-                    <div class="text-sm border-b border-dashed border-gray-200 pb-4">
-                        <p class="text-gray-500">Cashier</p>
-                        <p class="font-semibold text-gray-900">{{ $order->user?->name ?? 'Unknown' }}</p>
+                    <div class="border-t border-dashed border-gray-400 my-2"></div>
+
+                    {{-- ========== ITEMS HEADER ========== --}}
+                    <div class="text-xs font-bold flex justify-between mb-1">
+                        <span class="flex-1">ITEM</span>
+                        <span class="w-16 text-right">QTY</span>
+                        <span class="w-20 text-right">AMOUNT</span>
                     </div>
 
-                    {{-- Items --}}
-                    <div class="space-y-3">
-                        <h3 class="font-semibold text-gray-900 text-sm uppercase tracking-wider">Items</h3>
-                        <div class="space-y-2">
-                            @foreach($order->items as $item)
-                                <div class="flex justify-between text-sm">
-                                    <div class="flex-1">
-                                        <p class="font-medium text-gray-900">{{ $item->product?->name ?? 'Product' }}</p>
-                                        <p class="text-gray-500">${{ number_format($item->unit_price, 2) }} × {{ $item->quantity }}</p>
-                                    </div>
-                                    <p class="font-semibold text-gray-900">${{ number_format($item->total, 2) }}</p>
+                    <div class="border-t border-gray-300 my-1"></div>
+
+                    {{-- ========== ITEMS LIST ========== --}}
+                    <div class="text-xs space-y-1.5">
+                        @foreach($order->items as $item)
+                            <div>
+                                <div class="truncate font-medium">{{ $item->product?->name ?? 'Item' }}</div>
+                                <div class="flex justify-between text-gray-600">
+                                    <span>@ GH₵{{ number_format($item->unit_price, 2) }}</span>
+                                    <span class="w-16 text-right">x{{ $item->quantity }}</span>
+                                    <span class="w-20 text-right font-medium text-black">{{ number_format($item->unit_price * $item->quantity, 2) }}</span>
                                 </div>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    {{-- Totals --}}
-                    <div class="border-t border-dashed border-gray-200 pt-4 space-y-2">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-500">Subtotal</span>
-                            <span class="text-gray-900">${{ number_format($order->subtotal, 2) }}</span>
-                        </div>
-                        @if($order->tax > 0)
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-500">Tax</span>
-                                <span class="text-gray-900">${{ number_format($order->tax, 2) }}</span>
                             </div>
-                        @endif
-                        <div class="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
-                            <span class="text-gray-900">Total</span>
-                            <span class="text-emerald-600">${{ number_format($order->total, 2) }}</span>
+                        @endforeach
+                    </div>
+
+                    <div class="border-t border-dashed border-gray-400 my-2"></div>
+
+                    {{-- ========== TOTALS ========== --}}
+                    <div class="text-xs space-y-1">
+                        <div class="flex justify-between">
+                            <span>Subtotal:</span>
+                            <span>GH₵{{ number_format($subtotal, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>VAT (15%):</span>
+                            <span>GH₵{{ number_format($taxAmount, 2) }}</span>
+                        </div>
+                        <div class="border-t border-gray-300 my-1"></div>
+                        <div class="flex justify-between font-bold text-sm">
+                            <span>GRAND TOTAL:</span>
+                            <span>GH₵{{ number_format($grandTotal, 2) }}</span>
                         </div>
                     </div>
 
-                    {{-- Payment Info --}}
+                    <div class="border-t border-dashed border-gray-400 my-2"></div>
+
+                    {{-- ========== PAYMENT INFO ========== --}}
                     @if($order->payment)
-                        <div class="bg-gray-50 rounded-xl p-4 space-y-2">
-                            <h3 class="font-semibold text-gray-900 text-sm uppercase tracking-wider">Payment Details</h3>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-500">Method</span>
-                                <span class="font-medium text-gray-900">{{ ucfirst($order->payment->method) }}</span>
+                        <div class="text-xs space-y-0.5 mb-2">
+                            <div class="flex justify-between">
+                                <span>Payment Method:</span>
+                                <span class="font-semibold uppercase">{{ $order->payment->method }}</span>
                             </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-500">Status</span>
-                                <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                    {{ ucfirst($order->payment->status) }}
-                                </span>
+                            <div class="flex justify-between">
+                                <span>Amount Paid:</span>
+                                <span>GH₵{{ number_format($order->payment->amount, 2) }}</span>
                             </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-500">Amount Paid</span>
-                                <span class="font-semibold text-gray-900">${{ number_format($order->payment->amount, 2) }}</span>
+                            <div class="flex justify-between">
+                                <span>Change:</span>
+                                <span>GH₵0.00</span>
                             </div>
                         </div>
+
+                        <div class="border-t border-dashed border-gray-400 my-2"></div>
                     @endif
 
-                    {{-- Footer --}}
-                    <div class="text-center pt-4 border-t border-dashed border-gray-200">
-                        <p class="text-gray-500 text-sm">Thank you for your purchase!</p>
-                        <p class="text-gray-400 text-xs mt-1">{{ now()->format('Y') }} POS System</p>
+                    {{-- ========== FOOTER ========== --}}
+                    <div class="text-center text-xs space-y-1 mt-3">
+                        <div class="font-semibold">Thank you for shopping with us!</div>
+                        <div class="text-gray-600 text-[10px] leading-tight">
+                            Goods once sold are not returnable.<br>
+                            Exchange within 7 days with receipt.<br>
+                            Electrical items warranty as per manufacturer.
+                        </div>
                     </div>
+
+                    <div class="border-t border-dashed border-gray-400 my-3"></div>
+
+                    {{-- ========== RECEIPT END ========== --}}
+                    <div class="text-center text-[10px] text-gray-500">
+                        <div>*** END OF RECEIPT ***</div>
+                        <div class="mt-1">{{ $order->created_at->format('d/m/Y H:i:s') }}</div>
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
 
     <style>
+        /* Thermal Receipt Styling */
+        .receipt-content {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            line-height: 1.3;
+            color: #000;
+            background: #fff;
+        }
+
+        /* Print Styles for 80mm Thermal Printer */
         @media print {
-            nav, header > div > div:last-child, .print\\:hidden {
+            @page {
+                size: 80mm auto;
+                margin: 0;
+            }
+
+            html, body {
+                width: 80mm;
+                margin: 0;
+                padding: 0;
+                background: white !important;
+            }
+
+            /* Hide everything except receipt */
+            nav,
+            header,
+            .print\\:hidden,
+            [class*="print:hidden"] {
                 display: none !important;
             }
-            body {
-                background: white !important;
+
+            /* Receipt container */
+            #thermal-receipt {
+                width: 80mm !important;
+                max-width: 80mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+            }
+
+            .receipt-content {
+                width: 80mm !important;
+                max-width: 80mm !important;
+                padding: 2mm 3mm !important;
+                font-size: 11px !important;
+            }
+
+            /* Ensure monospace font */
+            .receipt-content,
+            .receipt-content * {
+                font-family: 'Courier New', Courier, monospace !important;
+            }
+
+            /* Hide screen-only elements */
+            .py-8 > div > div:first-child {
+                display: none !important;
+            }
+
+            /* Adjust spacing */
+            .receipt-content .border-t {
+                border-color: #000 !important;
+            }
+
+            /* Ensure text is black */
+            .receipt-content,
+            .receipt-content * {
+                color: #000 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        /* Screen preview styling */
+        @media screen {
+            #thermal-receipt {
+                margin: 0 auto;
+                max-width: 320px;
+            }
+
+            .receipt-content {
+                width: 100% !important;
+                max-width: 320px;
             }
         }
     </style>

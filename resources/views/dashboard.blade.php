@@ -73,7 +73,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-emerald-100 text-sm">Today's Sales</p>
-                                <p class="mt-2 text-3xl font-bold">${{ number_format($metrics['todaySales'] ?? 0, 2) }}</p>
+                                <p class="mt-2 text-3xl font-bold">₵{{ number_format($metrics['todaySales'] ?? 0, 2) }}</p>
                             </div>
                             <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +166,7 @@
                                         </span>
                                         <div>
                                             <p class="text-sm font-medium text-gray-900">{{ $item->product?->name ?? 'Product' }}</p>
-                                            <p class="text-xs text-gray-500">${{ number_format($item->product?->price ?? 0, 2) }}</p>
+                                            <p class="text-xs text-gray-500">₵{{ number_format($item->product?->price ?? 0, 2) }}</p>
                                         </div>
                                     </div>
                                     <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">{{ $item->total_qty }} sold</span>
@@ -196,7 +196,7 @@
                                     </svg>
                                 </span>
                             </div>
-                            <p class="mt-3 text-3xl font-bold">${{ number_format($metrics['todaySales'] ?? 0, 2) }}</p>
+                            <p class="mt-3 text-3xl font-bold">₵{{ number_format($metrics['todaySales'] ?? 0, 2) }}</p>
                             <p class="mt-1 text-xs text-violet-200">Revenue collected today</p>
                         </div>
                     </div>
@@ -216,7 +216,7 @@
                                 All time
                             </span>
                         </div>
-                        <p class="mt-4 text-2xl font-bold text-gray-900">${{ number_format($metrics['totalSales'] ?? 0, 2) }}</p>
+                        <p class="mt-4 text-2xl font-bold text-gray-900">₵{{ number_format($metrics['totalSales'] ?? 0, 2) }}</p>
                         <p class="mt-1 text-sm text-gray-500">Total Revenue</p>
                     </div>
 
@@ -338,7 +338,7 @@
                                     </span>
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-semibold text-gray-900 truncate">{{ $item->product?->name ?? 'Product' }}</p>
-                                        <p class="text-xs text-gray-500">${{ number_format($item->product?->price ?? 0, 2) }}</p>
+                                        <p class="text-xs text-gray-500">₵{{ number_format($item->product?->price ?? 0, 2) }}</p>
                                     </div>
                                     <span class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
                                         {{ $item->total_qty }} sold
@@ -429,7 +429,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                                     </svg>
                                 </div>
-                                <p class="text-2xl font-bold text-violet-700">${{ number_format($metrics['todaySales'] ?? 0, 2) }}</p>
+                                <p class="text-2xl font-bold text-violet-700">₵{{ number_format($metrics['todaySales'] ?? 0, 2) }}</p>
                                 <p class="text-sm text-violet-600 mt-1">Today's Revenue</p>
                             </div>
                             <div class="text-center p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100">
@@ -438,7 +438,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                                     </svg>
                                 </div>
-                                <p class="text-2xl font-bold text-emerald-700">${{ number_format($metrics['totalSales'] ?? 0, 2) }}</p>
+                                <p class="text-2xl font-bold text-emerald-700">₵{{ number_format($metrics['totalSales'] ?? 0, 2) }}</p>
                                 <p class="text-sm text-emerald-600 mt-1">Total Revenue</p>
                             </div>
                             <div class="text-center p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100">
@@ -472,7 +472,7 @@
                     </div>
                     <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200">
                         <p class="text-sm text-gray-500">Total Sales</p>
-                        <p class="mt-2 text-3xl font-semibold text-gray-900">${{ number_format($metrics['totalSales'], 2) }}</p>
+                        <p class="mt-2 text-3xl font-semibold text-gray-900">₵{{ number_format($metrics['totalSales'], 2) }}</p>
                         <p class="mt-1 text-xs text-gray-500">All completed payments</p>
                     </div>
                     <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200">
@@ -482,7 +482,7 @@
                     </div>
                     <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200">
                         <p class="text-sm text-gray-500">Today's Sales</p>
-                        <p class="mt-2 text-3xl font-semibold text-gray-900">${{ number_format($metrics['todaySales'], 2) }}</p>
+                        <p class="mt-2 text-3xl font-semibold text-gray-900">₵{{ number_format($metrics['todaySales'], 2) }}</p>
                         <p class="mt-1 text-xs text-gray-500">Completed payments</p>
                     </div>
                 </div>

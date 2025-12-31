@@ -34,7 +34,7 @@
                                     <td class="px-4 py-2 text-sm text-gray-900">#{{ $order->id }}</td>
                                     <td class="px-4 py-2 text-sm text-gray-600">{{ $order->user?->email ?? 'N/A' }}</td>
                                     <td class="px-4 py-2 text-sm text-gray-600 capitalize">{{ $order->status }}</td>
-                                    <td class="px-4 py-2 text-sm text-gray-600">${{ number_format($order->total, 2) }}</td>
+                                    <td class="px-4 py-2 text-sm text-gray-600">₵{{ number_format($order->total, 2) }}</td>
                                     <td class="px-4 py-2 text-sm text-gray-600">{{ $order->payments->count() }}</td>
                                     <td class="px-4 py-2 text-sm text-gray-500">{{ $order->created_at->format('Y-m-d') }}</td>
                                 </tr>

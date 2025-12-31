@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\ProductImportController;
 use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Models\Role;
@@ -40,6 +41,12 @@ Route::middleware('auth')->group(function () {
         ->group(function () {
             Route::get('/products', [AdminProductController::class, 'index'])->name('products.index');
             Route::post('/products', [AdminProductController::class, 'store'])->name('products.store');
+            Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
+            Route::put('/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
+            Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('products.destroy');
+            Route::get('/products/import', [ProductImportController::class, 'index'])->name('products.import.form');
+            Route::post('/products/import', [ProductImportController::class, 'import'])->name('products.import');
+            Route::get('/products/import/template', [ProductImportController::class, 'downloadTemplate'])->name('products.import.template');
         });
 
     // Manager routes
@@ -49,6 +56,13 @@ Route::middleware('auth')->group(function () {
         ->group(function () {
             Route::get('/products', [AdminProductController::class, 'index'])->name('products.index');
             Route::post('/products', [AdminProductController::class, 'store'])->name('products.store');
+            Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
+            Route::put('/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
+            Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('products.destroy');
+            Route::get('/products/export', [AdminProductController::class, 'export'])->name('products.export');
+            Route::get('/products/import', [ProductImportController::class, 'index'])->name('products.import.form');
+            Route::post('/products/import', [ProductImportController::class, 'import'])->name('products.import');
+            Route::get('/products/import/template', [ProductImportController::class, 'downloadTemplate'])->name('products.import.template');
         });
 
     // Cashier routes

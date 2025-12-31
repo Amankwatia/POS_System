@@ -19,7 +19,10 @@ class POSController extends Controller
         $userId = auth()->id();
 
         return view('cashier.pos', [
-            'products' => Product::available()->orderBy('name')->get(),
+            'products' => Product::available()
+                ->select(['id', 'name', 'sku', 'price', 'stock']) // Only needed columns
+                ->orderBy('name')
+                ->get(),
             'todaySales' => Payment::completed()->today()->forUser($userId)->sum('amount'),
             'todayTransactions' => Order::completed()->today()->forUser($userId)->count(),
         ]);
@@ -40,11 +43,16 @@ class POSController extends Controller
                 $itemsData = $this->prepareOrderItems($validated['items']);
                 $subtotal = collect($itemsData)->sum('total');
 
+                // Calculate 15% VAT
+                $taxRate = 0.15;
+                $tax = round($subtotal * $taxRate, 2);
+                $total = $subtotal + $tax;
+
                 $order = Order::create([
                     'user_id' => auth()->id(),
                     'subtotal' => $subtotal,
-                    'tax' => 0,
-                    'total' => $subtotal,
+                    'tax' => $tax,
+                    'total' => $total,
                     'status' => Order::STATUS_COMPLETED,
                 ]);
 
@@ -52,26 +60,26 @@ class POSController extends Controller
 
                 Payment::create([
                     'order_id' => $order->id,
-                    'amount' => $subtotal,
+                    'amount' => $total,
                     'method' => $validated['payment_method'],
                     'status' => Payment::STATUS_COMPLETED,
                     'paid_at' => now(),
                 ]);
 
-                return ['order' => $order, 'subtotal' => $subtotal];
+                return ['order' => $order, 'total' => $total];
             });
 
             $change = $this->calculateChange(
                 $validated['payment_method'],
                 $validated['amount_tendered'] ?? 0,
-                $result['subtotal']
+                $result['total']
             );
 
             return redirect()->route('cashier.pos')->with([
                 'status' => 'Sale completed successfully!',
                 'receipt' => [
                     'order_id' => $result['order']->id,
-                    'total' => $result['subtotal'],
+                    'total' => $result['total'],
                     'amount_tendered' => $validated['amount_tendered'] ?? 0,
                     'change' => $change,
                 ],
@@ -87,7 +95,8 @@ class POSController extends Controller
         $userId = auth()->id();
 
         return view('cashier.transactions', [
-            'transactions' => Order::with(['items.product', 'payment'])
+            'transactions' => Order::with(['items.product:id,name,sku,price', 'payment'])
+                ->withCount('items')
                 ->forUser($userId)
                 ->latest()
                 ->paginate(20),
@@ -97,17 +106,39 @@ class POSController extends Controller
 
     public function receipt(Order $order): View
     {
-        $order->load(['items.product', 'payment', 'user']);
+        $order->load([
+            'items.product:id,name,sku,price',
+            'payment',
+            'user:id,name,email'
+        ]);
 
         return view('cashier.receipt', compact('order'));
     }
 
+    /**
+     * Prepare order items with batch loading to prevent N+1 queries.
+     * Previously: each item queried Product::findOrFail() in a loop.
+     * Now: loads all products in one query and validates in memory.
+     */
     private function prepareOrderItems(array $items): array
     {
+        // Extract all unique product IDs
+        $productIds = collect($items)->pluck('product_id')->unique()->values();
+
+        // Batch load all products in one query
+        $products = Product::whereIn('id', $productIds)
+            ->select(['id', 'name', 'price', 'stock'])
+            ->get()
+            ->keyBy('id');
+
         $itemsData = [];
 
         foreach ($items as $item) {
-            $product = Product::findOrFail($item['product_id']);
+            $product = $products->get($item['product_id']);
+
+            if (!$product) {
+                throw new \Exception("Product not found");
+            }
 
             if (!$product->hasStock($item['quantity'])) {
                 throw new \Exception("Insufficient stock for {$product->name}");
@@ -124,19 +155,32 @@ class POSController extends Controller
         return $itemsData;
     }
 
+    /**
+     * Create order items and decrement stock.
+     * Uses batch insert for order items, individual decrements for accurate stock tracking.
+     */
     private function createOrderItems(Order $order, array $itemsData): void
     {
+        $orderItems = [];
+        $now = now();
+
         foreach ($itemsData as $data) {
-            OrderItem::create([
+            $orderItems[] = [
                 'order_id' => $order->id,
                 'product_id' => $data['product']->id,
                 'quantity' => $data['quantity'],
                 'unit_price' => $data['unit_price'],
-                'total' => $data['total'],
-            ]);
+                'subtotal' => $data['total'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
 
+            // Decrement stock - must be individual for proper locking
             $data['product']->decrement('stock', $data['quantity']);
         }
+
+        // Batch insert all order items
+        OrderItem::insert($orderItems);
     }
 
     private function calculateChange(string $method, float $tendered, float $total): float

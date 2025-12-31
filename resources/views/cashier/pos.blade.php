@@ -47,9 +47,9 @@
                         @if(session('receipt'))
                             <p class="text-sm text-emerald-700">
                                 Order #{{ session('receipt')['order_id'] }} · 
-                                Total: ${{ number_format(session('receipt')['total'], 2) }}
+                                Total: ₵{{ number_format(session('receipt')['total'], 2) }}
                                 @if(session('receipt')['change'] > 0)
-                                    · Change: ${{ number_format(session('receipt')['change'], 2) }}
+                                    · Change: ₵{{ number_format(session('receipt')['change'], 2) }}
                                 @endif
                             </p>
                         @endif
@@ -82,7 +82,7 @@
                         </span>
                         <div>
                             <p class="text-sm text-gray-500">Today's Sales</p>
-                            <p class="text-2xl font-bold text-gray-900">${{ number_format($todaySales, 2) }}</p>
+                            <p class="text-2xl font-bold text-gray-900">₵{{ number_format($todaySales, 2) }}</p>
                         </div>
                     </div>
                 </div>
@@ -126,7 +126,7 @@
                                         <p class="font-medium text-gray-900 text-sm">{{ $product->name }}</p>
                                         <p class="text-xs text-gray-500">SKU: {{ $product->sku }}</p>
                                         <div class="flex items-center justify-between w-full mt-2">
-                                            <span class="text-emerald-600 font-semibold">${{ number_format($product->price, 2) }}</span>
+                                            <span class="text-emerald-600 font-semibold">₵{{ number_format($product->price, 2) }}</span>
                                             <span class="text-xs px-2 py-0.5 rounded-full {{ $product->stock <= $product->reorder_level ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600' }}">
                                                 {{ $product->stock }} in stock
                                             </span>
@@ -179,11 +179,15 @@
                                 <div class="border-t border-gray-100 pt-4 space-y-2">
                                     <div class="flex justify-between text-sm">
                                         <span class="text-gray-500">Subtotal</span>
-                                        <span id="subtotal" class="font-medium text-gray-900">$0.00</span>
+                                        <span id="subtotal" class="font-medium text-gray-900">₵0.00</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-500">VAT (15%)</span>
+                                        <span id="tax" class="font-medium text-gray-900">₵0.00</span>
                                     </div>
                                     <div class="flex justify-between text-lg font-bold">
                                         <span class="text-gray-900">Total</span>
-                                        <span id="total" class="text-emerald-600">$0.00</span>
+                                        <span id="total" class="text-emerald-600">₵0.00</span>
                                     </div>
                                 </div>
 
@@ -249,12 +253,12 @@
                                 <div id="cash-section" class="mt-4 space-y-2">
                                     <label class="block text-sm font-medium text-gray-700">Amount Tendered</label>
                                     <div class="relative">
-                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₵</span>
                                         <input type="number" name="amount_tendered" id="amount-tendered" step="0.01" min="0" placeholder="0.00" class="w-full rounded-xl border-gray-200 bg-gray-50 pl-7 pr-4 py-2.5 text-sm shadow-sm focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20">
                                     </div>
                                     <div class="flex justify-between text-sm">
                                         <span class="text-gray-500">Change</span>
-                                        <span id="change" class="font-medium text-emerald-600">$0.00</span>
+                                        <span id="change" class="font-medium text-emerald-600">₵0.00</span>
                                     </div>
                                 </div>
 
@@ -320,6 +324,22 @@
             renderCart();
         }
 
+        function setQuantity(productId, value, maxStock) {
+            if (!cart[productId]) return;
+
+            let newQty = parseInt(value) || 0;
+            
+            if (newQty <= 0) {
+                delete cart[productId];
+            } else if (newQty > maxStock) {
+                alert(`Cannot set more than ${maxStock}. Stock limit reached.`);
+                cart[productId].quantity = maxStock;
+            } else {
+                cart[productId].quantity = newQty;
+            }
+            renderCart();
+        }
+
         function removeFromCart(productId) {
             delete cart[productId];
             renderCart();
@@ -365,19 +385,23 @@
                     totalItems += item.quantity;
 
                     cartItems.innerHTML += `
-                        <div class="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+                        <div class="flex items-center justify-between p-2 rounded-lg bg-gray-50 gap-2">
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-medium text-gray-900 truncate">${item.name}</p>
-                                <p class="text-xs text-gray-500">$${item.price.toFixed(2)} × ${item.quantity}</p>
+                                <p class="text-xs text-gray-500">₵${item.price.toFixed(2)} × ${item.quantity}</p>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm font-semibold text-gray-900">$${lineTotal.toFixed(2)}</span>
-                                <div class="flex items-center gap-1">
-                                    <button type="button" onclick="updateQuantity(${item.id}, -1)" class="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 text-gray-600 text-xs">−</button>
-                                    <span class="w-6 text-center text-sm">${item.quantity}</span>
-                                    <button type="button" onclick="updateQuantity(${item.id}, 1)" class="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 text-gray-600 text-xs">+</button>
-                                </div>
-                                <button type="button" onclick="removeFromCart(${item.id})" class="w-6 h-6 rounded bg-red-100 hover:bg-red-200 text-red-600 text-xs">×</button>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <span class="text-sm font-semibold text-gray-900 mr-1">₵${lineTotal.toFixed(2)}</span>
+                                <button type="button" onclick="updateQuantity(${item.id}, -1)" class="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 text-gray-600 text-sm font-bold flex items-center justify-center">−</button>
+                                <input type="number" 
+                                       value="${item.quantity}" 
+                                       min="1" 
+                                       max="${item.stock}"
+                                       onchange="setQuantity(${item.id}, this.value, ${item.stock})"
+                                       onkeyup="if(event.key === 'Enter') this.blur()"
+                                       class="w-16 h-7 text-center text-sm border border-gray-300 rounded focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                <button type="button" onclick="updateQuantity(${item.id}, 1)" class="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 text-gray-600 text-sm font-bold flex items-center justify-center">+</button>
+                                <button type="button" onclick="removeFromCart(${item.id})" class="w-7 h-7 rounded bg-red-100 hover:bg-red-200 text-red-600 text-sm font-bold flex items-center justify-center ml-1">×</button>
                             </div>
                         </div>
                     `;
@@ -393,17 +417,22 @@
             }
 
             cartCount.textContent = `${totalItems} item${totalItems !== 1 ? 's' : ''}`;
-            subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
-            totalEl.textContent = `$${subtotal.toFixed(2)}`;
+            const tax = subtotal * 0.15;
+            const total = subtotal + tax;
+            subtotalEl.textContent = `₵${subtotal.toFixed(2)}`;
+            document.getElementById('tax').textContent = `₵${tax.toFixed(2)}`;
+            totalEl.textContent = `₵${total.toFixed(2)}`;
 
             updateChange();
         }
 
         function updateChange() {
-            const total = Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const subtotal = Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const tax = subtotal * 0.15;
+            const total = subtotal + tax;
             const tendered = parseFloat(document.getElementById('amount-tendered').value) || 0;
             const change = Math.max(0, tendered - total);
-            document.getElementById('change').textContent = `$${change.toFixed(2)}`;
+            document.getElementById('change').textContent = `₵${change.toFixed(2)}`;
         }
 
         // Payment method toggle

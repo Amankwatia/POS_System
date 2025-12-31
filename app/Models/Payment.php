@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class Payment extends Model
 {
@@ -49,9 +50,26 @@ class Payment extends Model
         return $query->whereDate('created_at', today());
     }
 
+    /**
+     * Optimized scope for filtering payments by user.
+     * Uses EXISTS subquery which is more efficient than whereHas for large datasets.
+     */
     public function scopeForUser(Builder $query, int $userId): Builder
     {
-        return $query->whereHas('order', fn($q) => $q->where('user_id', $userId));
+        return $query->whereExists(function ($subquery) use ($userId) {
+            $subquery->select(DB::raw(1))
+                ->from('orders')
+                ->whereColumn('orders.id', 'payments.order_id')
+                ->where('orders.user_id', $userId);
+        });
+    }
+
+    /**
+     * Date range scope for reporting.
+     */
+    public function scopeDateRange(Builder $query, $start, $end): Builder
+    {
+        return $query->whereBetween('created_at', [$start, $end]);
     }
 
     // Helpers

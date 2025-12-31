@@ -39,7 +39,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-blue-100 text-sm">Today's Total Sales</p>
-                        <p class="text-4xl font-bold mt-1">${{ number_format($todaySales, 2) }}</p>
+                        <p class="text-4xl font-bold mt-1">₵{{ number_format($todaySales, 2) }}</p>
                     </div>
                     <div class="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,7 +87,7 @@
                                         </div>
                                     </td>
                                     <td class="px-5 py-4">
-                                        <span class="text-sm font-semibold text-gray-900">${{ number_format($order->total, 2) }}</span>
+                                        <span class="text-sm font-semibold text-gray-900">₵{{ number_format($order->total, 2) }}</span>
                                     </td>
                                     <td class="px-5 py-4">
                                         @if($order->payment)

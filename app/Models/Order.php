@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -52,7 +53,7 @@ class Order extends Model
         return $this->hasOne(Payment::class)->latestOfMany();
     }
 
-    // Scopes
+    // Status Scopes
     public function scopeCompleted(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_COMPLETED);
@@ -63,13 +64,44 @@ class Order extends Model
         return $query->where('status', self::STATUS_PENDING);
     }
 
+    public function scopeCancelled(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_CANCELLED);
+    }
+
+    // Date Scopes
     public function scopeToday(Builder $query): Builder
     {
         return $query->whereDate('created_at', today());
     }
 
+    public function scopeThisMonth(Builder $query): Builder
+    {
+        return $query->whereBetween('created_at', [
+            Carbon::now()->startOfMonth(),
+            Carbon::now()->endOfMonth(),
+        ]);
+    }
+
+    public function scopeDateRange(Builder $query, $start, $end): Builder
+    {
+        return $query->whereBetween('created_at', [$start, $end]);
+    }
+
+    // User Scopes
     public function scopeForUser(Builder $query, int $userId): Builder
     {
         return $query->where('user_id', $userId);
+    }
+
+    // Relationship Loading Scopes
+    public function scopeWithDetails(Builder $query): Builder
+    {
+        return $query->with(['user:id,name,email', 'items.product:id,name,sku,price', 'payment']);
+    }
+
+    public function scopeWithItemsCount(Builder $query): Builder
+    {
+        return $query->withCount('items');
     }
 }
