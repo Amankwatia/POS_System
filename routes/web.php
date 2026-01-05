@@ -44,6 +44,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
             Route::put('/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
             Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('products.destroy');
+            Route::get('/products/export', [AdminProductController::class, 'export'])->name('products.export');
             Route::get('/products/import', [ProductImportController::class, 'index'])->name('products.import.form');
             Route::post('/products/import', [ProductImportController::class, 'import'])->name('products.import');
             Route::get('/products/import/template', [ProductImportController::class, 'downloadTemplate'])->name('products.import.template');

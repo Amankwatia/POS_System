@@ -6,6 +6,9 @@
     <title>{{ config('app.name', 'POS System') }} - Point of Sale</title>
     <meta name="description" content="Modern Point of Sale system for efficient business management">
 
+    <!-- Favicon with IE text -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%236366f1' rx='20' width='100' height='100'/><text x='50' y='68' font-size='45' font-weight='bold' fill='white' text-anchor='middle' font-family='Arial'>IE</text></svg>">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
@@ -29,18 +32,19 @@
             background-clip: text;
         }
         .card-hover {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .card-hover:hover {
             transform: translateY(-4px);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
         @keyframes float {
-            0%, 100% { transform: translateY(0px); }
+            0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
         }
         .animate-float {
             animation: float 6s ease-in-out infinite;
+            will-change: transform;
         }
         @keyframes pulse-glow {
             0%, 100% { opacity: 0.6; }
@@ -48,6 +52,10 @@
         }
         .animate-pulse-glow {
             animation: pulse-glow 3s ease-in-out infinite;
+            will-change: opacity;
+        }
+        .card-hover {
+            will-change: transform, box-shadow;
         }
     </style>
 </head>
@@ -58,8 +66,10 @@
         <div class="absolute inset-0 z-0">
             <img
                 src="{{ asset('images/welcome.jpg') }}"
-                alt="Background"
+                alt=""
                 class="w-full h-full object-cover"
+                loading="eager"
+                fetchpriority="high"
             >
             <div class="hero-gradient absolute inset-0"></div>
         </div>
@@ -75,14 +85,12 @@
             <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex items-center justify-between">
                     <!-- Logo -->
-                    <div class="flex items-center space-x-3">
+                    <a href="/" class="flex items-center space-x-3" aria-label="Home">
                         <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center glow-effect">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
+                            <span class="text-white font-extrabold text-lg" aria-hidden="true">IE</span>
                         </div>
                         <span class="text-xl font-bold text-white">{{ config('app.name', 'POS System') }}</span>
-                    </div>
+                    </a>
 
                     <!-- Auth Links -->
                     @if (Route::has('login'))
@@ -100,15 +108,13 @@
                                    class="px-5 py-2.5 text-slate-300 hover:text-white font-medium transition-colors">
                                     Sign In
                                 </a>
-                                @if (Route::has('register'))
-                                    <a href="{{ route('register') }}"
-                                       class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-300 hover:shadow-indigo-500/50 hover:-translate-y-0.5">
-                                        Get Started
-                                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                        </svg>
-                                    </a>
-                                @endif
+                                <a href="mailto:brightamankwatia@gmail.com"
+                                   class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-300 hover:shadow-indigo-500/50 hover:-translate-y-0.5">
+                                    Contact Us
+                                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                </a>
                             @endauth
                         </div>
                     @endif
@@ -140,9 +146,9 @@
 
                         <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                             @guest
-                                <a href="{{ route('register') }}"
+                                <a href="https://wa.me/233507190086"
                                    class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl shadow-xl shadow-indigo-500/30 transition-all duration-300 hover:shadow-indigo-500/50 hover:-translate-y-1 text-lg">
-                                    Whatsapp Amankwatia @+233540538403
+                                    Whatsapp Amankwatia @+233507190086
                                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                     </svg>
@@ -245,13 +251,9 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <p class="text-slate-500 text-sm">
-                        &copy; {{ date('Y') }} {{ config('app.name', 'POS System') }}. All rights reserved.
+                        &copy; {{ date('Y') }} maxtek-pos | All rights reserved.
                     </p>
-                    <div class="flex items-center space-x-6">
-                        <span class="text-slate-500 text-sm">Built with Laravel</span>
-                        <span class="text-slate-600">•</span>
-                        <span class="text-slate-500 text-sm">v{{ app()->version() }}</span>
-                    </div>
+                    <span class="text-slate-500 text-sm">Powered by Maxtek</span>
                 </div>
             </div>
         </footer>
